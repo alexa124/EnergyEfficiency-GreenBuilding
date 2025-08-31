@@ -1,6 +1,6 @@
 # Energy Efficiency of Buildings (Green Building Analysis)
 
-This project is part of my **Edunet X Shell Internship** (4 weeks) , where I am analyzing the energy efficiency of buildings using machine learning.  
+This project is part of my **Edunet X Shell Internship** (4 weeks) , where I am analyzing the energy efficiency of buildings using AI and Machine learning.  
 The objective is to understand how building design parameters influence heating and cooling loads, and to develop models that can guide sustainable and energy-efficient building designs.
 
 ---
