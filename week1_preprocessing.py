@@ -6,19 +6,14 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 
-# --------------------------
+
 # Step 1: Define the Problem
-# --------------------------
 ''' We want to predict Heating Load (Y1) and Cooling Load (Y2) of buildings 
  based on design parameters like Relative Compactness, Surface Area, Wall Area, Roof Area, etc.
  This helps in understanding energy efficiency in green buildings.'''
 
-# --------------------------
 # Step 2: Load Dataset
-# --------------------------
 data = pd.read_excel("ENB2012_data.xlsx")
-
-# Rename columns for clarity
 data.columns = [
     "Relative_Compactness", "Surface_Area", "Wall_Area", "Roof_Area",
     "Overall_Height", "Orientation", "Glazing_Area", "Glazing_Area_Distribution",
@@ -27,9 +22,7 @@ data.columns = [
 
 print("Dataset Loaded. Shape:", data.shape)
 
-# --------------------------
 # Step 3: Split Data
-# --------------------------
 X = data.iloc[:, :-2]   # Features
 y1 = data["Heating_Load"]   # Target 1
 y2 = data["Cooling_Load"]   # Target 2
@@ -39,24 +32,18 @@ X_train, X_test, y2_train, y2_test = train_test_split(X, y2, test_size=0.2, rand
 
 print("Training and testing sets created successfully.")
 
-# --------------------------
 # Step 4: Algorithm Selection
-# --------------------------
-# We start with a simple model: Linear Regression
+# Model: Linear Regression
 model_y1 = LinearRegression()
 model_y2 = LinearRegression()
 
-# --------------------------
 # Step 5: Model Training
-# --------------------------
 model_y1.fit(X_train, y1_train)
 model_y2.fit(X_train, y2_train)
 
 print("\nModels trained successfully.")
 
-# --------------------------
 # Step 6: Model Evaluation
-# --------------------------
 # Predictions
 y1_pred = model_y1.predict(X_test)
 y2_pred = model_y2.predict(X_test)
