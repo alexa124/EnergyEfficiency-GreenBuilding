@@ -1,84 +1,139 @@
-import pandas as pd 
+"""
+Energy Efficiency of Buildings (Green Building Analysis)
+Author: Aman Pandey
+"""
+
+# ==============================
+# 1. Define the Problem
+# ==============================
+# Goal: Predict Heating Load (Y1) and Cooling Load (Y2) of buildings 
+# using architectural features (Wall Area, Roof Area, Orientation, etc.)
+
+# ==============================
+# 2. Data Collection & Understanding
+# ==============================
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-import numpy as np
 
-
-# Step 1: Define the Problem
-''' We want to predict Heating Load (Y1) and Cooling Load (Y2) of buildings 
- based on design parameters like Relative Compactness, Surface Area, Wall Area, Roof Area, etc.
- This helps in understanding energy efficiency in green buildings.'''
-
-# Step 2: Load Dataset
+# Load dataset (ENB2012)
 data = pd.read_excel("ENB2012_data.xlsx")
+print("Data Shape:", data.shape)
+print(data.head())
+
+# ==============================
+# 3. Data Preprocessing
+# ==============================
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+# Rename columns for clarity
 data.columns = [
-    "Relative_Compactness", "Surface_Area", "Wall_Area", "Roof_Area",
-    "Overall_Height", "Orientation", "Glazing_Area", "Glazing_Area_Distribution",
+    "Relative_Compactness", "Surface_Area", "Wall_Area", "Roof_Area", 
+    "Overall_Height", "Orientation", "Glazing_Area", "Glazing_Area_Distribution", 
     "Heating_Load", "Cooling_Load"
 ]
 
-print("Dataset Loaded. Shape:", data.shape)
+# Features (X) & Targets (Y1, Y2)
+X = data.drop(["Heating_Load", "Cooling_Load"], axis=1)
+y1 = data["Heating_Load"]
+y2 = data["Cooling_Load"]
 
-# Step 3: Split Data
-X = data.iloc[:, :-2]   # Features
-y1 = data["Heating_Load"]   # Target 1
-y2 = data["Cooling_Load"]   # Target 2
+# Standardization
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-X_train, X_test, y1_train, y1_test = train_test_split(X, y1, test_size=0.2, random_state=42)
-X_train, X_test, y2_train, y2_test = train_test_split(X, y2, test_size=0.2, random_state=42)
+# ==============================
+# 4. Data Splitting
+# ==============================
+X_train, X_test, y1_train, y1_test, y2_train, y2_test = train_test_split(
+    X_scaled, y1, y2, test_size=0.2, random_state=42
+)
 
-print("Training and testing sets created successfully.")
+# ==============================
+# 5. Algorithm Selection
+# ==============================
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
-# Step 4: Algorithm Selection
-# Model: Linear Regression
-model_y1 = LinearRegression()
-model_y2 = LinearRegression()
+models = {
+    "Linear Regression": LinearRegression(),
+    "Decision Tree": DecisionTreeRegressor(random_state=42),
+    "Random Forest": RandomForestRegressor(random_state=42),
+    "Gradient Boosting": GradientBoostingRegressor(random_state=42)
+}
 
-# Step 5: Model Training
-model_y1.fit(X_train, y1_train)
-model_y2.fit(X_train, y2_train)
+# ==============================
+# 6. Model Training
+# ==============================
+trained_models = {}
+for name, model in models.items():
+    model.fit(X_train, y1_train)
+    trained_models[name + "_Heating"] = model
+    
+    model.fit(X_train, y2_train)
+    trained_models[name + "_Cooling"] = model
 
-print("\nModels trained successfully.")
+# ==============================
+# 7. Model Evaluation
+# ==============================
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# Step 6: Model Evaluation
-# Predictions
-y1_pred = model_y1.predict(X_test)
-y2_pred = model_y2.predict(X_test)
+def evaluate(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    mae = mean_absolute_error(y_test, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    r2 = r2_score(y_test, y_pred)
+    return mae, rmse, r2
 
-# Evaluation Metrics
-mse_y1 = mean_squared_error(y1_test, y1_pred)
-rmse_y1 = np.sqrt(mse_y1)
-r2_y1 = r2_score(y1_test, y1_pred)
+results = {}
+for name, model in trained_models.items():
+    if "Heating" in name:
+        mae, rmse, r2 = evaluate(model, X_test, y1_test)
+    else:
+        mae, rmse, r2 = evaluate(model, X_test, y2_test)
+    results[name] = {"MAE": mae, "RMSE": rmse, "R2": r2}
 
-mse_y2 = mean_squared_error(y2_test, y2_pred)
-rmse_y2 = np.sqrt(mse_y2)
-r2_y2 = r2_score(y2_test, y2_pred)
+results_df = pd.DataFrame(results).T
+print("\nModel Evaluation Results:\n", results_df)
 
-print("\n--- Heating Load Model Performance ---")
-print("MSE:", mse_y1)
-print("RMSE:", rmse_y1)
-print("R2 Score:", r2_y1)
+# ==============================
+# 8. Model Optimization (Hyperparameter Tuning)
+# ==============================
+from sklearn.model_selection import GridSearchCV
 
-print("\n--- Cooling Load Model Performance ---")
-print("MSE:", mse_y2)
-print("RMSE:", rmse_y2)
-print("R2 Score:", r2_y2)
+param_grid = {
+    "n_estimators": [50, 100, 200],
+    "max_depth": [5, 10, None]
+}
 
-# Scatter plot: Actual vs Predicted (Heating Load)
-plt.figure(figsize=(6,4))
-plt.scatter(y1_test, y1_pred, alpha=0.7, color="blue")
-plt.xlabel("Actual Heating Load")
-plt.ylabel("Predicted Heating Load")
-plt.title("Actual vs Predicted Heating Load")
-plt.show()
+grid = GridSearchCV(
+    RandomForestRegressor(random_state=42),
+    param_grid,
+    cv=3,
+    scoring="neg_mean_squared_error",
+    n_jobs=-1
+)
 
-# Scatter plot: Actual vs Predicted (Cooling Load)
-plt.figure(figsize=(6,4))
-plt.scatter(y2_test, y2_pred, alpha=0.7, color="green")
-plt.xlabel("Actual Cooling Load")
-plt.ylabel("Predicted Cooling Load")
-plt.title("Actual vs Predicted Cooling Load")
-plt.show()
+grid.fit(X_train, y1_train)
+best_heating_model = grid.best_estimator_
+
+grid.fit(X_train, y2_train)
+best_cooling_model = grid.best_estimator_
+
+print("\nBest Params (Heating):", best_heating_model)
+print("\nBest Params (Cooling):", best_cooling_model)
+
+# ==============================
+# 9. Final Model Evaluation on Test Data
+# ==============================
+heating_mae, heating_rmse, heating_r2 = evaluate(best_heating_model, X_test, y1_test)
+cooling_mae, cooling_rmse, cooling_r2 = evaluate(best_cooling_model, X_test, y2_test)
+
+print("\nFinal Heating Model Performance:")
+print("MAE:", heating_mae, "RMSE:", heating_rmse, "R2:", heating_r2)
+
+print("\nFinal Cooling Model Performance:")
+print("MAE:", cooling_mae, "RMSE:", cooling_rmse, "R2:", cooling_r2)
