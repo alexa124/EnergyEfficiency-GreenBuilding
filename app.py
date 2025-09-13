@@ -6,8 +6,19 @@ from sklearn.model_selection import train_test_split
 # Load dataset
 data = pd.read_excel("ENB2012_data.xlsx")
 
-# Rename target columns for clarity
-data.rename(columns={"Y1": "Heating_Load", "Y2": "Cooling_Load"}, inplace=True)
+# Rename input + target columns
+data.rename(columns={
+    "X1": "Relative_Compactness",
+    "X2": "Surface_Area",
+    "X3": "Wall_Area",
+    "X4": "Roof_Area",
+    "X5": "Overall_Height",
+    "X6": "Orientation",
+    "X7": "Glazing_Area",
+    "X8": "Glazing_Area_Distribution",
+    "Y1": "Heating_Load",
+    "Y2": "Cooling_Load"
+}, inplace=True)
 
 # Features & targets
 X = data.drop(["Heating_Load", "Cooling_Load"], axis=1)
@@ -29,11 +40,14 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model = LinearRegression()
 model.fit(X_train, y_train)
 
-# User input
+# User input with meaningful names
 features = {}
 for col in X.columns:
     features[col] = st.number_input(
-        col, float(data[col].min()), float(data[col].max()), float(data[col].mean())
+        col.replace("_", " "),  # nicer display label
+        float(data[col].min()),
+        float(data[col].max()),
+        float(data[col].mean())
     )
 
 input_df = pd.DataFrame([features])
