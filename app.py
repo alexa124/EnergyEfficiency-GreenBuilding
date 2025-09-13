@@ -25,6 +25,12 @@ X = data.drop(["Heating_Load", "Cooling_Load"], axis=1)
 
 # Streamlit UI
 st.title("🏠 Energy Efficiency Predictor")
+st.markdown(
+    """
+    #### Made by **Aman Pandey**  
+    During 4-week internship of **Edunet x Shell**
+    """
+)
 st.write("This app predicts the **Heating Load** or **Cooling Load** of a building based on its design features.")
 
 # User chooses target
