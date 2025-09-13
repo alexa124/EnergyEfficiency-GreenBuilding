@@ -5,6 +5,7 @@ This project is part of my **Edunet X Shell Internship** (4 weeks), where I am a
 The objective is to understand how building design parameters influence **heating and cooling loads**, and to develop models that can guide sustainable and energy-efficient building designs.  
 
 <p>Visit the live app here: <a href="https://energy-efficiency-green-building-aman-pandey.streamlit.app/" target="_blank">Launch App</a></p>  
+
 ---
 
 ## Week 1
