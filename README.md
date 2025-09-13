@@ -48,6 +48,7 @@ The objective is to understand how building design parameters influence **heatin
   - User inputs building features  
   - Model predicts **Heating & Cooling Loads**  
 - Deployed locally using **Streamlit**  
+  <p>Visit the live app here: <a href="https://energy-efficiency-green-building-aman-pandey.streamlit.app/" target="_blank">Launch App</a></p>  
 
 ---
 
