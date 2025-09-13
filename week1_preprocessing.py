@@ -3,137 +3,129 @@ Energy Efficiency of Buildings (Green Building Analysis)
 Author: Aman Pandey
 """
 
-# ==============================
-# 1. Define the Problem
-# ==============================
-# Goal: Predict Heating Load (Y1) and Cooling Load (Y2) of buildings 
-# using architectural features (Wall Area, Roof Area, Orientation, etc.)
+# week6_energy_efficiency.py
 
-# ==============================
-# 2. Data Collection & Understanding
-# ==============================
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.metrics import mean_squared_error, r2_score
 
-# Load dataset (ENB2012)
+# -------------------------
+# Step 1: Define the Problem
+# -------------------------
+print("Problem: Predict Heating and Cooling Load of buildings based on their design features.")
+
+# -------------------------
+# Step 2: Data Collection and Understanding
+# -------------------------
 data = pd.read_excel("ENB2012_data.xlsx")
-print("Data Shape:", data.shape)
+print("\nFirst 5 rows of dataset:")
 print(data.head())
+print("\nDataset Info:")
+print(data.info())
 
-# ==============================
-# 3. Data Preprocessing
-# ==============================
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+# -------------------------
+# Step 3: Data Preprocessing
+# -------------------------
+data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
 
-# Rename columns for clarity
 data.columns = [
-    "Relative_Compactness", "Surface_Area", "Wall_Area", "Roof_Area", 
-    "Overall_Height", "Orientation", "Glazing_Area", "Glazing_Area_Distribution", 
+    "Relative_Compactness", "Surface_Area", "Wall_Area", "Roof_Area",
+    "Overall_Height", "Orientation", "Glazing_Area", "Glazing_Area_Distribution",
     "Heating_Load", "Cooling_Load"
 ]
 
-# Features (X) & Targets (Y1, Y2)
+# Check for missing values
+print("\nMissing Values:")
+print(data.isnull().sum())
+
+# -------------------------
+# Step 4: Data Splitting
+# -------------------------
 X = data.drop(["Heating_Load", "Cooling_Load"], axis=1)
-y1 = data["Heating_Load"]
-y2 = data["Cooling_Load"]
+y_heating = data["Heating_Load"]
+y_cooling = data["Cooling_Load"]
 
-# Standardization
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X_train, X_test, y_train_heat, y_test_heat = train_test_split(X, y_heating, test_size=0.2, random_state=42)
+_, _, y_train_cool, y_test_cool = train_test_split(X, y_cooling, test_size=0.2, random_state=42)
 
-# ==============================
-# 4. Data Splitting
-# ==============================
-X_train, X_test, y1_train, y1_test, y2_train, y2_test = train_test_split(
-    X_scaled, y1, y2, test_size=0.2, random_state=42
-)
+# -------------------------
+# Step 5: Algorithm Selection
+# -------------------------
+print("\nSelected Algorithms: Linear Regression, Ridge, Lasso")
 
-# ==============================
-# 5. Algorithm Selection
-# ==============================
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+# -------------------------
+# Step 6: Model Training
+# -------------------------
+lin_model = LinearRegression()
+lin_model.fit(X_train, y_train_heat)
 
-models = {
-    "Linear Regression": LinearRegression(),
-    "Decision Tree": DecisionTreeRegressor(random_state=42),
-    "Random Forest": RandomForestRegressor(random_state=42),
-    "Gradient Boosting": GradientBoostingRegressor(random_state=42)
-}
+ridge = Ridge()
+lasso = Lasso()
 
-# ==============================
-# 6. Model Training
-# ==============================
-trained_models = {}
-for name, model in models.items():
-    model.fit(X_train, y1_train)
-    trained_models[name + "_Heating"] = model
-    
-    model.fit(X_train, y2_train)
-    trained_models[name + "_Cooling"] = model
+# -------------------------
+# Step 7: Model Evaluation
+# -------------------------
+y_pred_heat = lin_model.predict(X_test)
+print("\nHeating Load - Linear Regression")
+print("MSE:", mean_squared_error(y_test_heat, y_pred_heat))
+print("R² Score:", r2_score(y_test_heat, y_pred_heat))
 
-# ==============================
-# 7. Model Evaluation
-# ==============================
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+plt.figure(figsize=(6, 6))
+plt.scatter(y_test_heat, y_pred_heat, alpha=0.7, color="blue")
+plt.xlabel("Actual Heating Load")
+plt.ylabel("Predicted Heating Load")
+plt.title("Heating Load: Actual vs Predicted")
+plt.plot([y_test_heat.min(), y_test_heat.max()],
+         [y_test_heat.min(), y_test_heat.max()], "r--")
+plt.show()
 
-def evaluate(model, X_test, y_test):
-    y_pred = model.predict(X_test)
-    mae = mean_absolute_error(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    r2 = r2_score(y_test, y_pred)
-    return mae, rmse, r2
+# -------------------------
+# Step 8: Model Optimization (Hyperparameter Tuning)
+# -------------------------
+param_grid = {"alpha": [0.01, 0.1, 1, 10, 100]}
 
-results = {}
-for name, model in trained_models.items():
-    if "Heating" in name:
-        mae, rmse, r2 = evaluate(model, X_test, y1_test)
-    else:
-        mae, rmse, r2 = evaluate(model, X_test, y2_test)
-    results[name] = {"MAE": mae, "RMSE": rmse, "R2": r2}
+ridge_cv = GridSearchCV(ridge, param_grid, cv=5, scoring="r2")
+ridge_cv.fit(X_train, y_train_heat)
 
-results_df = pd.DataFrame(results).T
-print("\nModel Evaluation Results:\n", results_df)
+lasso_cv = GridSearchCV(lasso, param_grid, cv=5, scoring="r2")
+lasso_cv.fit(X_train, y_train_heat)
 
-# ==============================
-# 8. Model Optimization (Hyperparameter Tuning)
-# ==============================
-from sklearn.model_selection import GridSearchCV
+print("\nBest Ridge Alpha:", ridge_cv.best_params_)
+print("Best Ridge Score:", ridge_cv.best_score_)
 
-param_grid = {
-    "n_estimators": [50, 100, 200],
-    "max_depth": [5, 10, None]
-}
+print("Best Lasso Alpha:", lasso_cv.best_params_)
+print("Best Lasso Score:", lasso_cv.best_score_)
 
-grid = GridSearchCV(
-    RandomForestRegressor(random_state=42),
-    param_grid,
-    cv=3,
-    scoring="neg_mean_squared_error",
-    n_jobs=-1
-)
+# -------------------------
+# Step 9: Final Model Evaluation on Test Data
+# -------------------------
+ridge_best = Ridge(alpha=ridge_cv.best_params_["alpha"])
+ridge_best.fit(X_train, y_train_heat)
+y_pred_ridge = ridge_best.predict(X_test)
 
-grid.fit(X_train, y1_train)
-best_heating_model = grid.best_estimator_
+lasso_best = Lasso(alpha=lasso_cv.best_params_["alpha"])
+lasso_best.fit(X_train, y_train_heat)
+y_pred_lasso = lasso_best.predict(X_test)
 
-grid.fit(X_train, y2_train)
-best_cooling_model = grid.best_estimator_
+print("\nFinal Evaluation (Heating Load):")
+print("Linear Regression R²:", r2_score(y_test_heat, y_pred_heat))
+print("Ridge Regression R²:", r2_score(y_test_heat, y_pred_ridge))
+print("Lasso Regression R²:", r2_score(y_test_heat, y_pred_lasso))
 
-print("\nBest Params (Heating):", best_heating_model)
-print("\nBest Params (Cooling):", best_cooling_model)
+# Plot comparison
+models = ["Linear", "Ridge", "Lasso"]
+scores = [
+    r2_score(y_test_heat, y_pred_heat),
+    r2_score(y_test_heat, y_pred_ridge),
+    r2_score(y_test_heat, y_pred_lasso)
+]
 
-# ==============================
-# 9. Final Model Evaluation on Test Data
-# ==============================
-heating_mae, heating_rmse, heating_r2 = evaluate(best_heating_model, X_test, y1_test)
-cooling_mae, cooling_rmse, cooling_r2 = evaluate(best_cooling_model, X_test, y2_test)
-
-print("\nFinal Heating Model Performance:")
-print("MAE:", heating_mae, "RMSE:", heating_rmse, "R2:", heating_r2)
-
-print("\nFinal Cooling Model Performance:")
-print("MAE:", cooling_mae, "RMSE:", cooling_rmse, "R2:", cooling_r2)
+plt.figure(figsize=(6, 4))
+sns.barplot(x=models, y=scores, palette="viridis")
+plt.title("Model Comparison (Heating Load)")
+plt.ylabel("R² Score")
+plt.show()
