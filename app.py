@@ -30,9 +30,9 @@ X = data.drop(["Heating_Load", "Cooling_Load"], axis=1)
 # -------------------------
 st.markdown(
     """
-    <div style="text-align:center; padding:15px; background-color:#f0f8ff; border-radius:10px;">
-        <h1 style="color:#2e86c1;">🏠 Energy Efficiency Predictor</h1>
-        <h4 style="color:#117a65;">Predict Heating & Cooling Load of Buildings</h4>
+    <div style="text-align:center; padding:15px; background-color:#e8f5e9; border-radius:10px;">
+        <h1 style="color:#2e7d32;">🌿 Energy Efficiency of Green Buildings</h1>
+        <h4 style="color:#1b5e20;">Predicting Heating & Cooling Loads for Sustainable Design</h4>
     </div>
     """,
     unsafe_allow_html=True
@@ -41,7 +41,23 @@ st.markdown(
 # Credit section
 st.info("👨‍💻 Made by **Aman Pandey** during 4-week internship at **Edunet x Shell**")
 
-st.write("This app predicts the **Heating Load** or **Cooling Load** of a building based on its design features.")
+st.write("This app predicts the **Heating Load** or **Cooling Load** of a building based on its design features — contributing to the analysis of **Energy Efficiency in Green Buildings**.")
+
+# -------------------------
+# Sidebar Info
+# -------------------------
+st.sidebar.title("📘 Project Info")
+st.sidebar.markdown(
+    """
+    **Energy Efficiency of Green Buildings**  
+    - Dataset: *Energy Efficiency Dataset (ENB2012)*  
+    - Features: Building geometry & design  
+    - Targets: Heating & Cooling Load  
+    - Goal: Promote **sustainable, low-energy architecture**
+    """
+)
+st.sidebar.markdown("---")
+st.sidebar.success("Internship Project • Edunet x Shell")
 
 # -------------------------
 # Target selection
@@ -61,7 +77,7 @@ model.fit(X_train, y_train)
 # -------------------------
 # User Input Section
 # -------------------------
-st.subheader("🔧 Enter Building Features")
+st.subheader("🏗️ Enter Building Features")
 
 features = {}
 for col in X.columns:
@@ -85,7 +101,7 @@ st.markdown(
     """
     <hr>
     <div style="text-align:center; color:gray; font-size:14px;">
-        © 2025 | Energy Efficiency Project | Developed by Aman Pandey
+        © 2025 | Energy Efficiency of Green Buildings | Developed by Aman Pandey
     </div>
     """,
     unsafe_allow_html=True
