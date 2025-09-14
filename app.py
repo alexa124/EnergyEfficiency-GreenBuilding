@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
@@ -94,6 +95,20 @@ if st.button(f"Predict {target_choice}"):
     prediction = model.predict(input_df)[0]
     st.success(f"📊 Predicted {target_choice}: {prediction:.2f}")
 
+    # -------------------------
+    # Actual vs Predicted Graph
+    # -------------------------
+    y_pred = model.predict(X_test)
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.scatter(y_test, y_pred, color="blue", alpha=0.6, label="Predictions")
+    ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color="red", linewidth=2, label="Ideal Fit")
+    ax.set_xlabel("Actual Values")
+    ax.set_ylabel("Predicted Values")
+    ax.set_title(f"Actual vs Predicted ({target_choice})")
+    ax.legend()
+    st.pyplot(fig)
+
 # -------------------------
 # Footer
 # -------------------------
@@ -106,4 +121,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
